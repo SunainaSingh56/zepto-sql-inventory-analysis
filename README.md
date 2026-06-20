@@ -1,3 +1,50 @@
+# 🛒 Zepto Inventory Analysis | SQL Project
+
+**Turning 3,700+ raw inventory rows into pricing, stock, and revenue decisions — using nothing but SQL.**
+
+Zepto is one of India's fastest-growing quick-commerce platforms, delivering groceries in minutes. Behind every "10-min delivery" promise is an inventory system juggling thousands of SKUs, fluctuating stock, and aggressive discounting. This project digs into that inventory data to answer the questions a category manager would actually ask: *What's driving revenue? What's sitting out of stock? Where are we discounting too much — or too little?*
+
+---
+
+## 📑 Table of Contents
+- [Tools Used](#-tools-used)
+- [Dataset](#-dataset)
+- [Project Workflow](#-project-workflow)
+- [Data Cleaning](#-data-cleaning)
+- [Business Questions & Queries](#-business-questions--queries)
+- [Key Insights](#-key-insights)
+- [Challenges Faced](#-challenges-faced)
+- [How to Run This Project](#-how-to-run-this-project)
+- [What's Next](#-whats-next)
+- [Let's Connect](#-lets-connect)
+
+---
+
+## 🛠 Tools Used
+
+| Tool | Purpose |
+|---|---|
+| **MySQL** | Data cleaning, querying, business logic |
+| **VS Code + SQLTools** | Query development environment |
+
+---
+
+## 📦 Dataset
+
+| Detail | Value |
+|---|---|
+| Source | [Kaggle — Zepto Inventory Dataset](https://www.kaggle.com/datasets/palvinder2006/zepto-inventory-dataset) |
+| Raw rows | 3,732 |
+| Rows analyzed (after cleaning & deduplication) | 1,675 |
+| Columns | 9 |
+| Key fields | `name`, `Category`, `mrp`, `discountPercent`, `discountedSellingPrice`, `availableQuantity`, `weightInGms`, `outOfStock`, `quantity` |
+
+---
+
+## 🔄 Project Workflow
+
+🔍 Explore  →  🧹 Clean  →  💡 Analyze  →  📊 Report
+
 **1. Data Exploration** — row counts, null audits across all 9 columns, category listing, stock-status breakdown, duplicate SKU checks.
 
 **2. Data Cleaning** — removed 1 invalid pricing record, fixed currency formatting, and deduplicated 1,187 products that were mistakenly tagged under multiple categories (see below).
