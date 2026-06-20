@@ -113,6 +113,8 @@ ORDER BY TOTAL_REVENUE;
 **Finding:** Cooking Essentials and Munchies tied for the top spot (₹3,37,369 each), while Fruits & Vegetables came in lowest (₹10,846) — fresh produce moves fast but contributes far less to revenue than packaged goods.
 </details>
 
+![Revenue by Category](q3_revenue_by_category.png)
+
 <details>
 <summary><b>Q4. Where is the platform under-discounting on premium items?</b></summary>
 
