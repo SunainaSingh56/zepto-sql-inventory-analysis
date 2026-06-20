@@ -188,13 +188,18 @@ ORDER BY total_inventory DESC;
 
 ## 🔑 Key Insights
 
-> 🏆 **Cooking Essentials & Munchies** are Zepto's revenue powerhouses, each generating an estimated **₹3,37,369** — more than 30x the revenue of Fruits & Vegetables.
+> 🏆 **Cooking Essentials & Munchies** are Zepto's revenue powerhouses, each generating an estimated **₹3,37,369**
+> — more than 30x the revenue of Fruits & Vegetables.
 
-> 🥦 **Perishables get discounted hardest.** Fruits & Vegetables (15.46% avg) and Meats/Fish/Eggs (11.03% avg) top the discount charts — a classic "sell it before it spoils" pricing strategy.
+> 🥦 **Perishables get discounted hardest.** Fruits & Vegetables (15.46% avg) and Meats/Fish/Eggs (11.03% avg) top the discount charts
+> — a classic "sell it before it spoils" pricing strategy.
 
-> 📉 **Stockouts are hitting high-value staples.** Ghee, atta, and chilli powder — daily essentials, not impulse buys — were found out of stock at premium price points, a likely source of lost revenue.
+> 📉 **Stockouts are hitting high-value staples.** Ghee, atta, and chilli powder
+> — daily essentials, not impulse buys
+> — were found out of stock at premium price points, a likely source of lost revenue.
 
-> 🔁 **Revenue clusters in pairs.** Several category pairs (Cooking Essentials/Munchies, Personal Care/Paan Corner, Packaged Food/Ice Cream/Chocolates) showed near-identical revenue figures — worth a deeper look to see if this reflects genuine category overlap or a data structure quirk.
+> 🔁 **Revenue clusters in pairs.** Several category pairs (Cooking Essentials/Munchies, Personal Care/Paan Corner, Packaged Food/Ice Cream/Chocolates) showed near-identical revenue figures
+> — worth a deeper look to see if this reflects genuine category overlap or a data structure quirk.
 
 ---
 
