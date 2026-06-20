@@ -48,7 +48,7 @@ Zepto is one of India's fastest-growing quick-commerce platforms, delivering gro
 
 **1. Data Exploration** — row counts, null audits across all 9 columns, category listing, stock-status breakdown, duplicate SKU checks.
 
-**2. Data Cleaning** — stripped invalid records, fixed currency formatting (see below).
+**2. Data Cleaning** — removed 1 invalid pricing records, fixed currency formatting (see below).
 
 **3. Business Insight Queries** — 8 SQL queries simulating real category-management questions.
 
@@ -58,7 +58,7 @@ Zepto is one of India's fastest-growing quick-commerce platforms, delivering gro
 
 | Issue | Fix |
 |---|---|
-| 3,607 rows with `mrp = 0` (junk/incomplete entries) | Deleted |
+| 1 rows with `mrp = 0` (junk/incomplete entries) | Deleted |
 | Prices stored in **paise**, not rupees | Divided `mrp` & `discountedSellingPrice` by 100 |
 
 ```sql
