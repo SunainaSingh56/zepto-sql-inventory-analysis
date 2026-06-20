@@ -100,6 +100,8 @@ ORDER BY mrp DESC;
 **Finding:** Everyday staples — Patanjali Cow's Ghee (₹565), MamyPoko Pants (₹399), Aashirvaad Atta (₹315) — were all out of stock despite high price points. These are exactly the SKUs that shouldn't be unavailable.
 </details>
 
+![Out of Stock High MRP](q2_outofstock_highmrp.png)
+
 <details>
 <summary><b>Q3. Which categories generate the most estimated revenue?</b></summary>
 
@@ -139,6 +141,8 @@ LIMIT 5;
 ```
 **Finding:** Fruits & Vegetables (15.46%) and Meats, Fish & Eggs (11.03%) lead in average discount — perishables get discounted hardest, likely to clear stock before spoilage.
 </details>
+
+![Average Discount by Category](q5_avg_discount_category.png)
 
 <details>
 <summary><b>Q6. Which products offer the best price-per-gram value?</b></summary>
