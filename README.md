@@ -1,3 +1,6 @@
+
+
+Readme · MD
 # 🛒 Zepto Inventory Analysis | SQL Project
  
 **Turning 3,700+ raw inventory rows into pricing, stock, and revenue decisions — using nothing but SQL.**
@@ -48,15 +51,14 @@ Zepto is one of India's fastest-growing quick-commerce platforms, delivering gro
 ```
 zepto-inventory-analysis/
 │
-├── zepto_setup.sql          # Table creation, data import, cleaning, deduplication
-├── zepto_analysis.sql       # All 20 business analysis queries (4 sections)
-├── screenshots/             # Query output screenshots
-│   ├── schema_overview.png      # Table schema & JOIN relationship
-│   ├── dedup_result.png         # Before/after row count (3,731 → 1,675)
-│   ├── outofstock_highmrp.png   # High-MRP out-of-stock products
-│   ├── revenue_by_category.png  # Revenue ranking by category
-│   ├── avg_discount_category.png # Average discount per category
-│   └── join_query_output.png    # Section 4 JOIN query result
+├── zepto_db_setup.sql           # Table creation, data import, cleaning, deduplication
+├── zepto_analysis.sql           # All 20 business analysis queries (4 sections)
+├── sql_schema_overview.png      # Table schema & JOIN relationship
+├── sql_dedup_result.png         # Before/after row count (3,731 → 1,675)
+├── sql_outofstock_highmrp.png   # High-MRP out-of-stock products
+├── sql_revenue_by_category.png  # Revenue ranking by category
+├── sql_avg_discount_category.png # Average discount per category
+├── sql_join_query_output.png    # Section 4 JOIN query result
 └── README.md
 ```
  
@@ -93,7 +95,7 @@ category_info (
  
 > `category_info` was created to enable **JOIN-based analysis** — linking inventory data with category-level metadata for richer business insights. This reflects real-world database design where business context lives in a separate dimension table.
  
-![Schema Overview](screenshots/schema_overview.png)
+![Schema Overview](sql_schema_overview.png)
  
 ---
  
@@ -160,7 +162,7 @@ This revealed the root cause: **1,187 products were duplicated across multiple c
  
 > 💡 This is the kind of data quality bug that goes unnoticed when analysts trust their output without questioning it. Catching it required understanding *why* results looked wrong — not just that they did.
  
-![Deduplication Result](screenshots/dedup_result.png)
+![Deduplication Result](sql_dedup_result.png)
  
 ---
  
@@ -219,7 +221,7 @@ LIMIT 5;
 ```
 **Finding:** Fruits & Vegetables (15.93%) and Meats, Fish & Eggs (9.91%) lead — perishables get discounted hardest to clear stock before spoilage.
 </details>
-![Average Discount by Category](screenshots/avg_discount_category.png)
+![Average Discount by Category](sql_avg_discount_category.png)
  
 ---
  
@@ -235,7 +237,7 @@ ORDER BY mrp DESC;
 ```
 **Finding:** Patanjali Cow's Ghee (₹565), MamyPoko Pants (₹399), Aashirvaad Atta (₹315) — daily essentials, not impulse buys — were all out of stock. These are the SKUs that *shouldn't* go unavailable.
 </details>
-![Out of Stock High MRP](screenshots/outofstock_highmrp.png)
+![Out of Stock High MRP](sql_outofstock_highmrp.png)
  
 <details>
 <summary><b>Q5. Which categories generate the most estimated revenue?</b></summary>
@@ -248,7 +250,7 @@ ORDER BY total_revenue DESC;
 ```
 **Finding:** Cooking Essentials leads at ₹2,83,472 — nearly **27x** the revenue of Fruits & Vegetables (₹10,378). Packaged goods dominate.
 </details>
-![Revenue by Category](screenshots/revenue_by_category.png)
+![Revenue by Category](sql_revenue_by_category.png)
  
 <details>
 <summary><b>Q6. Best price-per-gram value products?</b></summary>
@@ -293,7 +295,7 @@ ORDER BY out_of_stock_count DESC;
 ```
 **Finding:** Premium-segment categories with high stockout rates represent the highest revenue risk — these need priority restocking.
 </details>
-![JOIN Query Output](screenshots/join_query_output.png)
+![JOIN Query Output](sql_join_query_output.png)
  
 > 📂 All 5 JOIN queries for this section — including discount efficiency by shelf life and stock risk by premium segment — are available in `zepto_analysis.sql` under Section 4.
  
@@ -339,7 +341,7 @@ USE zepto_db;
  
 **Step 3 — Run setup file first** (creates tables, imports data, cleans & deduplicates)
 ```sql
-SOURCE zepto_setup.sql;
+SOURCE zepto_db_setup.sql;
 ```
  
 **Step 4 — Run analysis file** (all 20 queries across 4 sections)
