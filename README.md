@@ -1,261 +1,367 @@
 # 🛒 Zepto Inventory Analysis | SQL Project
-
+ 
 **Turning 3,700+ raw inventory rows into pricing, stock, and revenue decisions — using nothing but SQL.**
-
-Zepto is one of India's fastest-growing quick-commerce platforms, delivering groceries in minutes. Behind every "10-min delivery" promise is an inventory system juggling thousands of SKUs, fluctuating stock, and aggressive discounting. This project digs into that inventory data to answer the questions a category manager would actually ask: *What's driving revenue? What's sitting out of stock? Where are we discounting too much — or too little?*
-
+ 
+Zepto is one of India's fastest-growing quick-commerce platforms, delivering groceries in minutes. Behind every "10-min delivery" promise is an inventory system juggling thousands of SKUs, fluctuating stock, and aggressive discounting. This project digs into that inventory data to answer questions a **category manager or business analyst** would actually ask: *What's driving revenue? What's sitting out of stock? Where are we discounting too much — or too little?*
+ 
 ---
-
+ 
 ## 📑 Table of Contents
 - [Tools Used](#-tools-used)
 - [Dataset](#-dataset)
+- [Project Structure](#-project-structure)
+- [Schema Design](#-schema-design)
 - [Project Workflow](#-project-workflow)
-- [Data Cleaning](#-data-cleaning)
-- [Business Questions & Queries](#-business-questions--queries)
+- [Data Cleaning & Deduplication](#-data-cleaning--deduplication)
+- [Analysis Sections](#-analysis-sections)
 - [Key Insights](#-key-insights)
 - [Challenges Faced](#-challenges-faced)
 - [How to Run This Project](#-how-to-run-this-project)
 - [What's Next](#-whats-next)
 - [Let's Connect](#-lets-connect)
-
 ---
-
+ 
 ## 🛠 Tools Used
-
+ 
 | Tool | Purpose |
 |---|---|
-| **MySQL** | Data cleaning, querying, business logic |
-| **VS Code + SQLTools** | Query development environment |
-
+| **MySQL 8.0** | Data cleaning, schema design, querying, business logic |
+| **VS Code + SQLTools** | Query development & execution environment |
+ 
 ---
-
+ 
 ## 📦 Dataset
-
+ 
 | Detail | Value |
 |---|---|
 | Source | [Kaggle — Zepto Inventory Dataset](https://www.kaggle.com/datasets/palvinder2006/zepto-inventory-dataset) |
 | Raw rows | 3,732 |
-| Rows analyzed (after cleaning & deduplication) | 1,675 |
+| Rows after removing invalid entry | 3,731 |
+| Rows after deduplication | 1,675 |
 | Columns | 9 |
-| Key fields | `name`, `Category`, `mrp`, `discountPercent`, `discountedSellingPrice`, `availableQuantity`, `weightInGms`, `outOfStock`, `quantity` |
-
+| Key fields | `name`, `category`, `mrp`, `discountPercent`, `discountedSellingPrice`, `availableQuantity`, `weightInGms`, `outOfStock`, `quantity` |
+ 
 ---
-
-## 🔄 Project Workflow
-
-🔍 Explore  →  🧹 Clean  →  💡 Analyze  →  📊 Report
-
-**1. Data Exploration** — row counts, null audits across all 9 columns, category listing, stock-status breakdown, duplicate SKU checks.
-
-**2. Data Cleaning** — removed 1 invalid pricing record, fixed currency formatting, and deduplicated 1,187 products that were mistakenly tagged under multiple categories (see below).
-
-**3. Business Insight Queries** — 8 SQL queries simulating real category-management questions, run against the cleaned dataset (`zepto_clean`).
-
+ 
+## 📁 Project Structure
+ 
+```
+zepto-inventory-analysis/
+│
+├── zepto_setup.sql          # Table creation, data import, cleaning, deduplication
+├── zepto_analysis.sql       # All 20 business analysis queries (4 sections)
+├── screenshots/             # Query output screenshots
+│   ├── schema_overview.png      # Table schema & JOIN relationship
+│   ├── dedup_result.png         # Before/after row count (3,731 → 1,675)
+│   ├── outofstock_highmrp.png   # High-MRP out-of-stock products
+│   ├── revenue_by_category.png  # Revenue ranking by category
+│   ├── avg_discount_category.png # Average discount per category
+│   └── join_query_output.png    # Section 4 JOIN query result
+└── README.md
+```
+ 
+> **Two-file approach:** Setup logic is cleanly separated from analysis queries — makes the project easier to review, reproduce, and extend.
+ 
 ---
-
-## 🧹 Data Cleaning
-
-| Issue | Fix |
-|---|---|
-| 1 row with `mrp = 0` (junk/incomplete entry) | Deleted |
-| Prices stored in **paise**, not rupees | Divided `mrp` & `discountedSellingPrice` by 100 |
-| 1,187 products tagged under multiple categories (duplicate rows) | Deduplicated — kept one row per product in a new `zepto_clean` table |
-
+ 
+## 🗂 Schema Design
+ 
+Two tables power this project:
+ 
 ```sql
--- Remove invalid pricing rows
-DELETE FROM zepto1
-WHERE mrp = 0;
-
+-- Main inventory table (deduplicated)
+zepto_clean (
+    name                   VARCHAR,
+    category               VARCHAR,
+    mrp                    DECIMAL,
+    discountPercent        DECIMAL,
+    discountedSellingPrice DECIMAL,
+    availableQuantity      INT,
+    weightInGms            DECIMAL,
+    outOfStock             VARCHAR,
+    quantity               INT
+)
+ 
+-- Category metadata table (enables JOIN-based analysis)
+category_info (
+    category               VARCHAR PRIMARY KEY,
+    category_type          VARCHAR,   -- 'Perishable' / 'Non-Perishable'
+    is_premium_segment     BOOLEAN,
+    avg_shelf_life_days    INT
+)
+```
+ 
+> `category_info` was created to enable **JOIN-based analysis** — linking inventory data with category-level metadata for richer business insights. This reflects real-world database design where business context lives in a separate dimension table.
+ 
+![Schema Overview](screenshots/schema_overview.png)
+ 
+---
+ 
+## 🔄 Project Workflow
+ 
+```
+🔍 Explore  →  🧹 Clean  →  🏗 Schema Design  →  💡 Analyze (4 Sections)  →  📊 Insights
+```
+ 
+| Phase | What Happened |
+|---|---|
+| **Exploration** | Row counts, null audits, category listing, stock-status breakdown, duplicate checks |
+| **Cleaning** | Removed invalid pricing rows, fixed paise→rupee conversion, corrected deduplication logic |
+| **Schema Design** | Created `zepto_clean` and `category_info` tables; established JOIN relationship |
+| **Analysis** | 20 queries across 4 business sections |
+ 
+---
+ 
+## 🧹 Data Cleaning & Deduplication
+ 
+### Issues Found & Fixed
+ 
+| Issue | Fix Applied |
+|---|---|
+| 1 row with `mrp = 0` (junk entry) | Deleted |
+| Prices stored in **paise**, not rupees | Divided `mrp` & `discountedSellingPrice` by 100 |
+| `outOfStock` rejected as boolean by MySQL | Imported as `VARCHAR`, filtered with `= 'true'` |
+| 1,187 products duplicated across multiple category tags | Deduplicated using `ROW_NUMBER()` window function |
+ 
+```sql
 -- Convert paise → rupees
 UPDATE zepto1
-SET mrp = mrp/100.0,
-    discountedSellingPrice = discountedSellingPrice/100.0;
-```
-
-### Duplicate Category Investigation
-
-While reviewing early results, several category pairs showed suspiciously identical revenue totals (e.g., Packaged Food, Ice Cream & Desserts, and Chocolates & Candies all returned the exact same figure). Investigating further revealed the root cause: many products were duplicated across multiple category labels in the source data.
-
-```sql
--- Identify products tagged under multiple categories
-SELECT name, COUNT(DISTINCT Category) AS category_count
-FROM zepto1
-GROUP BY name
-HAVING category_count > 1
-ORDER BY category_count DESC;
-
--- Create a deduplicated table, keeping one row per product
+SET mrp = mrp / 100.0,
+    discountedSellingPrice = discountedSellingPrice / 100.0;
+ 
+-- Corrected deduplication — one row per product
 CREATE TABLE zepto_clean AS
 SELECT *
 FROM (
     SELECT *,
-           ROW_NUMBER() OVER (PARTITION BY name ORDER BY Category) AS rn
+           ROW_NUMBER() OVER (
+               PARTITION BY name
+               ORDER BY category
+           ) AS rn
     FROM zepto1
 ) ranked
 WHERE rn = 1;
 ```
-
-This reduced the dataset from 3,731 rows (post pricing-cleanup) to 1,675 rows — removing 2,056 duplicate entries across 1,187 affected products — and category count from 14 down to 9 genuinely distinct categories.
-
+ 
+### The Duplicate Investigation — How It Was Caught
+ 
+Early revenue queries returned **suspiciously identical totals** across unrelated categories (Packaged Food, Ice Cream & Desserts, and Chocolates & Candies all showed the same number). Rather than accepting the results, I wrote diagnostic queries:
+ 
+```sql
+-- Identify products tagged under multiple categories
+SELECT name, COUNT(DISTINCT category) AS category_count
+FROM zepto1
+GROUP BY name
+HAVING category_count > 1
+ORDER BY category_count DESC;
+```
+ 
+This revealed the root cause: **1,187 products were duplicated across multiple category labels** in the source data — adding 2,056 extra rows to the dataset. After deduplication, the dataset reduced from **3,731 → 1,675 rows**, and all revenue and discount figures were recalculated for accuracy.
+ 
+> 💡 This is the kind of data quality bug that goes unnoticed when analysts trust their output without questioning it. Catching it required understanding *why* results looked wrong — not just that they did.
+ 
+![Deduplication Result](screenshots/dedup_result.png)
+ 
 ---
-
-## 💡 Business Questions & Queries
-
+ 
+## 💡 Analysis Sections
+ 
+The 20 queries in `zepto_analysis.sql` are organized into 4 sections:
+ 
+---
+ 
+### 📌 Section 1 — Data Exploration (5 Queries)
+ 
+Initial scan of the dataset before any analysis begins.
+ 
+```sql
+-- Stock status breakdown
+SELECT outOfStock, COUNT(*) AS product_count
+FROM zepto_clean
+GROUP BY outOfStock;
+ 
+-- Distinct categories after deduplication
+SELECT DISTINCT category FROM zepto_clean ORDER BY category;
+```
+ 
+---
+ 
+### 📌 Section 2 — Pricing & Discount Analysis (5 Queries)
+ 
 <details>
-<summary><b>Q1. Which products offer the best discount-based value?</b></summary>
-
+<summary><b>Q1. Which products offer the highest discounts?</b></summary>
 ```sql
 SELECT DISTINCT name, mrp, discountPercent
 FROM zepto_clean
 ORDER BY discountPercent DESC
 LIMIT 10;
 ```
-**Finding:** Biscuit/wafer brands (Dukes Waffy) and ready-to-cook kits (Ceres Foods) dominate the top 10 — all sitting at a steep 50–51% off.
+**Finding:** Biscuit/wafer brands (Dukes Waffy) and ready-to-cook kits (Ceres Foods) dominate the top 10 — all at 50–51% off.
 </details>
-
 <details>
-<summary><b>Q2. Which high-value products are out of stock?</b></summary>
-
+<summary><b>Q2. Where is the platform under-discounting on premium items?</b></summary>
+```sql
+SELECT DISTINCT name, mrp, discountPercent
+FROM zepto_clean
+WHERE mrp > 500 AND discountPercent < 10
+ORDER BY mrp DESC;
+```
+**Finding:** A clear segment of premium-priced SKUs (MRP > ₹500) carries minimal discounting — likely positioned as non-promotional everyday essentials.
+</details>
+<details>
+<summary><b>Q3. Which categories discount the most, on average?</b></summary>
+```sql
+SELECT category, ROUND(AVG(discountPercent), 2) AS avg_discount
+FROM zepto_clean
+GROUP BY category
+ORDER BY avg_discount DESC
+LIMIT 5;
+```
+**Finding:** Fruits & Vegetables (15.93%) and Meats, Fish & Eggs (9.91%) lead — perishables get discounted hardest to clear stock before spoilage.
+</details>
+![Average Discount by Category](screenshots/avg_discount_category.png)
+ 
+---
+ 
+### 📌 Section 3 — Stock & Revenue Analysis (5 Queries)
+ 
+<details>
+<summary><b>Q4. Which high-value products are out of stock?</b></summary>
 ```sql
 SELECT DISTINCT name, outOfStock, mrp
 FROM zepto_clean
 WHERE outOfStock = 'true' AND mrp > 300
 ORDER BY mrp DESC;
 ```
-**Finding:** Everyday staples — Patanjali Cow's Ghee (₹565), MamyPoko Pants (₹399), Aashirvaad Atta (₹315), Everest Kashmiri Lal Chilli Powder (₹310) — were all out of stock despite high price points. These are exactly the SKUs that shouldn't be unavailable.
+**Finding:** Patanjali Cow's Ghee (₹565), MamyPoko Pants (₹399), Aashirvaad Atta (₹315) — daily essentials, not impulse buys — were all out of stock. These are the SKUs that *shouldn't* go unavailable.
 </details>
-
-![Out of Stock High MRP](q2_outofstock_highmrp.png)
-
+![Out of Stock High MRP](screenshots/outofstock_highmrp.png)
+ 
 <details>
-<summary><b>Q3. Which categories generate the most estimated revenue?</b></summary>
-
+<summary><b>Q5. Which categories generate the most estimated revenue?</b></summary>
 ```sql
-SELECT Category,
-       SUM(discountedSellingPrice * availableQuantity) AS TOTAL_REVENUE
+SELECT category,
+       SUM(discountedSellingPrice * availableQuantity) AS total_revenue
 FROM zepto_clean
-GROUP BY Category
-ORDER BY TOTAL_REVENUE DESC;
+GROUP BY category
+ORDER BY total_revenue DESC;
 ```
-**Finding:** Cooking Essentials leads with an estimated ₹2,83,472 in revenue, followed by Paan Corner (₹2,22,777) and Chocolates & Candies (₹2,02,772). Fruits & Vegetables came in lowest (₹10,378) — fresh produce moves fast but contributes far less to revenue than packaged goods.
+**Finding:** Cooking Essentials leads at ₹2,83,472 — nearly **27x** the revenue of Fruits & Vegetables (₹10,378). Packaged goods dominate.
 </details>
-
-![Revenue by Category](q3_revenue_by_category.png)
-
+![Revenue by Category](screenshots/revenue_by_category.png)
+ 
 <details>
-<summary><b>Q4. Where is the platform under-discounting on premium items?</b></summary>
-
-```sql
-SELECT DISTINCT name, mrp, discountPercent
-FROM zepto_clean
-WHERE mrp > 500 AND discountPercent < 10
-ORDER BY mrp DESC, discountPercent DESC;
-```
-**Finding:** A clear segment of premium-priced products (MRP > ₹500) carries minimal discounting (<10%) — these are likely positioned as non-promotional, everyday-essential SKUs.
-</details>
-
-<details>
-<summary><b>Q5. Which categories discount the most, on average?</b></summary>
-
-```sql
-SELECT Category, ROUND(AVG(discountPercent), 2) AS avg_discount
-FROM zepto_clean
-GROUP BY Category
-ORDER BY avg_discount DESC
-LIMIT 5;
-```
-**Finding:** Fruits & Vegetables (15.93%) and Meats, Fish & Eggs (9.91%) lead in average discount — perishables get discounted hardest, likely to clear stock before spoilage.
-</details>
-
-![Average Discount by Category](q5_avg_discount_category.png)
-
-<details>
-<summary><b>Q6. Which products offer the best price-per-gram value?</b></summary>
-
+<summary><b>Q6. Best price-per-gram value products?</b></summary>
 ```sql
 SELECT DISTINCT name, weightInGms, discountedSellingPrice,
-       ROUND(discountedSellingPrice/weightInGms, 2) AS price_per_gram
+       ROUND(discountedSellingPrice / weightInGms, 2) AS price_per_gram
 FROM zepto_clean
 WHERE weightInGms >= 100
 ORDER BY price_per_gram;
 ```
-**Finding:** Surfaces the true "value for money" leaders — useful for building a "Best Value" badge/filter feature.
+**Finding:** Surfaces the true value-for-money leaders — a foundation for "Best Value" badge or filter logic.
 </details>
-
-<details>
-<summary><b>Q7. How can products be grouped by pack size?</b></summary>
-
-```sql
-SELECT DISTINCT name, weightInGms,
-CASE
-    WHEN weightInGms < 1000 THEN 'low'
-    WHEN weightInGms < 5000 THEN 'medium'
-    ELSE 'bulk'
-END AS weight_category
-FROM zepto_clean;
-```
-**Finding:** Segments inventory into Low/Medium/Bulk pack sizes — a foundation for size-based recommendation logic.
-</details>
-
-<details>
-<summary><b>Q8. What's the total inventory weight carried per category?</b></summary>
-
-```sql
-SELECT Category, SUM(weightInGms * availableQuantity) AS total_inventory
-FROM zepto_clean
-GROUP BY Category
-ORDER BY total_inventory DESC;
-```
-**Finding:** Highlights which categories are warehouse/logistics-heavy — important for delivery-time and storage planning in quick-commerce.
-</details>
-
 ---
-
+ 
+### 📌 Section 4 — JOIN-Based Analysis with category_info (5 Queries)
+ 
+This section uses `category_info` — a dimension table created specifically to enable JOIN-based analysis linking inventory data with category metadata.
+ 
+<details>
+<summary><b>Q7. Revenue breakdown by category type (Perishable vs Non-Perishable)?</b></summary>
+```sql
+SELECT ci.category_type,
+       SUM(z.discountedSellingPrice * z.availableQuantity) AS total_revenue,
+       ROUND(AVG(z.discountPercent), 2) AS avg_discount
+FROM zepto_clean z
+JOIN category_info ci ON z.category = ci.category
+GROUP BY ci.category_type
+ORDER BY total_revenue DESC;
+```
+**Finding:** Non-perishable categories dominate revenue, while perishables carry higher average discounts — a classic inventory strategy difference.
+</details>
+<details>
+<summary><b>Q8. Which premium-segment categories have the most out-of-stock products?</b></summary>
+```sql
+SELECT ci.category, ci.is_premium_segment,
+       COUNT(*) AS out_of_stock_count
+FROM zepto_clean z
+JOIN category_info ci ON z.category = ci.category
+WHERE z.outOfStock = 'true' AND ci.is_premium_segment = TRUE
+GROUP BY ci.category, ci.is_premium_segment
+ORDER BY out_of_stock_count DESC;
+```
+**Finding:** Premium-segment categories with high stockout rates represent the highest revenue risk — these need priority restocking.
+</details>
+![JOIN Query Output](screenshots/join_query_output.png)
+ 
+> 📂 All 5 JOIN queries for this section — including discount efficiency by shelf life and stock risk by premium segment — are available in `zepto_analysis.sql` under Section 4.
+ 
+---
+ 
 ## 🔑 Key Insights
-
-> 🏆 **Cooking Essentials** is Zepto's revenue powerhouse, generating an estimated **₹2,83,472**
-> — nearly 27x the revenue of Fruits & Vegetables.
-
-> 🥦 **Perishables get discounted hardest.** Fruits & Vegetables (15.93% avg) and Meats, Fish & Eggs (9.91% avg) top the discount charts
-> — a classic "sell it before it spoils" pricing strategy.
-
-> 📉 **Stockouts are hitting high-value staples.** Ghee, atta, and chilli powder
-> — daily essentials, not impulse buys
-> — were found out of stock at premium price points, a likely source of lost revenue.
-
-> 🔍 **Caught and fixed a data quality issue.** Initial revenue queries showed identical totals across seemingly unrelated categories (e.g., Packaged Food, Ice Cream & Desserts, and Chocolates & Candies). Investigation revealed 1,187 products were duplicated across multiple category tags in the source data, accounting for 2,056 excess rows. "...After deduplication, the dataset shrank from 3,731 to 1,675 rows, and all revenue figures were recalculated for accuracy."
-
+ 
+> 🏆 **Cooking Essentials** is Zepto's revenue powerhouse at an estimated **₹2,83,472** — nearly 27x the revenue of Fruits & Vegetables.
+ 
+> 🥦 **Perishables get discounted hardest.** Fruits & Vegetables (15.93% avg) and Meats, Fish & Eggs (9.91% avg) top the discount charts — a classic "sell it before it spoils" pricing strategy.
+ 
+> 📉 **Stockouts are hitting high-value staples.** Ghee, atta, and chilli powder — daily essentials — were found out of stock at premium price points, a likely source of significant lost revenue.
+ 
+> 🔍 **Caught and fixed a critical data quality bug.** Identical revenue totals across unrelated categories revealed 1,187 products duplicated across multiple category tags — adding 2,056 excess rows. After correcting the deduplication logic, the dataset reduced from 3,731 → 1,675 rows and all figures were recalculated.
+ 
+> 🗂 **JOIN-based analysis added real depth.** Creating a `category_info` dimension table and writing JOIN queries enabled business context (perishable vs non-perishable, premium segmentation) that single-table queries couldn't provide.
+ 
 ---
-
+ 
 ## 🧩 Challenges Faced
-
-**Boolean import errors:** MySQL rejected `outOfStock` as a true boolean type during CSV import.
-**Fix:** Imported the column as `VARCHAR` and used string-based filtering (`outOfStock = 'true'`) instead — a practical workaround that kept the analysis moving without losing data integrity.
-
-**Hidden duplicate-category bug:** Early revenue queries returned suspiciously identical totals for unrelated categories. Tracing the issue back to 1,187 duplicate-tagged products required writing diagnostic queries before trusting any business conclusion — a reminder that surprising results in SQL are usually a data signal, not a fluke.
-
+ 
+**Boolean import error:** MySQL rejected `outOfStock` as a true boolean during CSV import.
+**Fix:** Imported as `VARCHAR`, used string-based filtering (`= 'true'`) — kept analysis moving without data loss.
+ 
+**Hidden duplicate-category bug:** Early revenue queries returned identical totals across unrelated categories. Traced it back to 1,187 duplicate-tagged products — required writing diagnostic queries before trusting any output. A reminder that surprising SQL results are almost always a data signal, not a fluke.
+ 
+**Deduplication logic correction:** Initial `ROW_NUMBER()` partitioning had an error that needed to be corrected to ensure exactly one row per product was retained, and all downstream queries were rerun after the fix.
+ 
 ---
-
+ 
 ## ▶️ How to Run This Project
-
-1. Clone this repo
-2. Import the dataset into MySQL as table `zepto1`
-3. Open `zepto_sql_project.sql` in VS Code (SQLTools) or any MySQL client
-4. Run queries top to bottom: Exploration → Cleaning → Deduplication (`zepto_clean`) → Business Insights
-
+ 
+**Step 1 — Clone the repo (terminal/bash)**
+```bash
+git clone https://github.com/SunainaSingh56/zepto-inventory-analysis.git
+```
+ 
+**Step 2 — Set up the database (MySQL client)**
+```sql
+CREATE DATABASE zepto_db;
+USE zepto_db;
+```
+ 
+**Step 3 — Run setup file first** (creates tables, imports data, cleans & deduplicates)
+```sql
+SOURCE zepto_setup.sql;
+```
+ 
+**Step 4 — Run analysis file** (all 20 queries across 4 sections)
+```sql
+SOURCE zepto_analysis.sql;
+```
+ 
+> Requires: MySQL 8.0+, VS Code with SQLTools extension (or any MySQL client)
+ 
 ---
-
+ 
 ## 🚀 What's Next
-
-- [ ] Build a Power BI dashboard on top of these findings
-- [ ] Trace the duplicate-category issue back to the original Kaggle source to understand its root cause
-- [ ] Automate the cleaning + deduplication steps into a reusable script
-
+ 
+- [ ] Build a Power BI dashboard on top of `zepto_clean` findings
+- [ ] Expand `category_info` with real shelf-life and margin data for deeper JOIN analysis
+- [ ] Automate the cleaning + deduplication into a stored procedure
 ---
-
+ 
 ## 🤝 Let's Connect
-
+ 
 📌 **GitHub:** [SunainaSingh56](https://github.com/SunainaSingh56)
 📌 **LinkedIn:** [Sunaina Singh](https://www.linkedin.com/in/sunainasingh56)
-
-*If you found this useful, a ⭐ on the repo is always appreciated!*
+ 
+*If you found this useful, a ⭐ on the repo goes a long way!*
+ 
